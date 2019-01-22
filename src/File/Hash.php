@@ -11,12 +11,15 @@ namespace Zend\Validator\File;
 
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
+use Zend\Validator\File\ValidationPsr7Trait;
 
 /**
  * Validator for the hash of given files
  */
 class Hash extends AbstractValidator
 {
+    use ValidationPsr7Trait;
+
     /**
      * @const string Error constants
      */
@@ -129,22 +132,7 @@ class Hash extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        if (is_string($value) && is_array($file)) {
-            // Legacy Zend\Transfer API support
-            $filename = $file['name'];
-            $file     = $file['tmp_name'];
-        } elseif (is_array($value)) {
-            if (! isset($value['tmp_name']) || ! isset($value['name'])) {
-                throw new Exception\InvalidArgumentException(
-                    'Value array must be in $_FILES format'
-                );
-            }
-            $file     = $value['tmp_name'];
-            $filename = $value['name'];
-        } else {
-            $file     = $value;
-            $filename = basename($file);
-        }
+        extract($this->getFileInfo($value, $file));
         $this->setValue($filename);
 
         // Is file readable ?

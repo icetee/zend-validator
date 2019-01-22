@@ -10,12 +10,15 @@
 namespace Zend\Validator\File;
 
 use Zend\Validator\Exception;
+use Zend\Validator\File\ValidationPsr7Trait;
 
 /**
  * Validator which checks if the destination file does not exist
  */
 class NotExists extends Exists
 {
+    use ValidationPsr7Trait;
+
     /**
      * @const string Error constants
      */
@@ -37,25 +40,7 @@ class NotExists extends Exists
      */
     public function isValid($value, $file = null)
     {
-        if (is_string($value) && is_array($file)) {
-            // Legacy Zend\Transfer API support
-            $filename = $file['name'];
-            $file     = $file['tmp_name'];
-            $this->setValue($filename);
-        } elseif (is_array($value)) {
-            if (! isset($value['tmp_name']) || ! isset($value['name'])) {
-                throw new Exception\InvalidArgumentException(
-                    'Value array must be in $_FILES format'
-                );
-            }
-            $file     = $value['tmp_name'];
-            $filename = basename($file);
-            $this->setValue($value['name']);
-        } else {
-            $file     = $value;
-            $filename = basename($file);
-            $this->setValue($filename);
-        }
+        extract($this->getFileInfoExists($value, $file));
 
         $check = false;
         $directories = $this->getDirectory(true);

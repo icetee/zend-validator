@@ -14,12 +14,15 @@ use Zend\Stdlib\ArrayUtils;
 use Zend\Stdlib\ErrorHandler;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
+use Zend\Validator\File\ValidationPsr7Trait;
 
 /**
  * Validator for the mime type of a file
  */
 class MimeType extends AbstractValidator
 {
+    use ValidationPsr7Trait;
+
     /**#@+
      * @const Error type constants
      */
@@ -341,25 +344,7 @@ class MimeType extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        if (is_string($value) && is_array($file)) {
-            // Legacy Zend\Transfer API support
-            $filename = $file['name'];
-            $filetype = $file['type'];
-            $file     = $file['tmp_name'];
-        } elseif (is_array($value)) {
-            if (! isset($value['tmp_name']) || ! isset($value['name']) || ! isset($value['type'])) {
-                throw new Exception\InvalidArgumentException(
-                    'Value array must be in $_FILES format'
-                );
-            }
-            $file     = $value['tmp_name'];
-            $filename = $value['name'];
-            $filetype = $value['type'];
-        } else {
-            $file     = $value;
-            $filename = basename($file);
-            $filetype = null;
-        }
+        extract($this->getFileInfo($value, $file, true));
         $this->setValue($filename);
 
         // Is file readable ?
