@@ -11,14 +11,14 @@ namespace Zend\Validator\File;
 
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for counting all words in a file
  */
 class WordCount extends AbstractValidator
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -178,16 +178,17 @@ class WordCount extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_FOUND);
             return false;
         }
 
-        $content     = file_get_contents($file);
+        $content     = file_get_contents($fileInfo['file']);
         $this->count = str_word_count($content);
         if (($this->getMax() !== null) && ($this->count > $this->getMax())) {
             $this->error(self::TOO_MUCH);

@@ -12,14 +12,14 @@ namespace Zend\Validator\File;
 use Zend\Stdlib\ErrorHandler;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for the maximum size of a file up to a max of 2GB
  */
 class Size extends AbstractValidator
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -237,18 +237,19 @@ class Size extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_FOUND);
             return false;
         }
 
         // limited to 4GB files
         ErrorHandler::start();
-        $size = sprintf("%u", filesize($file));
+        $size = sprintf("%u", filesize($fileInfo['file']));
         ErrorHandler::stop();
         $this->size = $size;
 

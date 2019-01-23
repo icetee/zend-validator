@@ -14,14 +14,14 @@ use Zend\Stdlib\ArrayUtils;
 use Zend\Stdlib\ErrorHandler;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for the mime type of a file
  */
 class MimeType extends AbstractValidator
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**#@+
      * @const Error type constants
@@ -344,11 +344,12 @@ class MimeType extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file, true));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file, true);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(static::NOT_READABLE);
             return false;
         }
@@ -369,13 +370,13 @@ class MimeType extends AbstractValidator
 
             $this->type = null;
             if (! empty($this->finfo)) {
-                $this->type = finfo_file($this->finfo, $file);
+                $this->type = finfo_file($this->finfo, $fileInfo['file']);
                 unset($this->finfo);
             }
         }
 
         if (empty($this->type) && $this->getHeaderCheck()) {
-            $this->type = $filetype;
+            $this->type = $fileInfo['filetype'];
         }
 
         if (empty($this->type)) {

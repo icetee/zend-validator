@@ -10,14 +10,14 @@
 namespace Zend\Validator\File;
 
 use finfo;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for the mime type of a file
  */
 class ExcludeMimeType extends MimeType
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     const FALSE_TYPE   = 'fileExcludeMimeTypeFalse';
     const NOT_DETECTED = 'fileExcludeMimeTypeNotDetected';
@@ -43,11 +43,12 @@ class ExcludeMimeType extends MimeType
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file, true));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file, true);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_READABLE);
             return false;
         }
@@ -64,12 +65,12 @@ class ExcludeMimeType extends MimeType
 
             $this->type = null;
             if (! empty($this->finfo)) {
-                $this->type = finfo_file($this->finfo, $file);
+                $this->type = finfo_file($this->finfo, $fileInfo['file']);
             }
         }
 
         if (empty($this->type) && $this->getHeaderCheck()) {
-            $this->type = $filetype;
+            $this->type = $fileInfo['filetype'];
         }
 
         if (empty($this->type)) {

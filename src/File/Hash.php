@@ -11,14 +11,14 @@ namespace Zend\Validator\File;
 
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for the hash of given files
  */
 class Hash extends AbstractValidator
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -132,19 +132,22 @@ class Hash extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_FOUND);
             return false;
         }
 
         $algos  = array_unique(array_values($this->getHash()));
         $hashes = array_unique(array_keys($this->getHash()));
+
         foreach ($algos as $algorithm) {
-            $filehash = hash_file($algorithm, $file);
+            $filehash = hash_file($algorithm, $fileInfo['file']);
+
             if ($filehash === false) {
                 $this->error(self::NOT_DETECTED);
                 return false;

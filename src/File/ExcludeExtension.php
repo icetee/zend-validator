@@ -9,7 +9,7 @@
 
 namespace Zend\Validator\File;
 
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 use Zend\Validator\Exception;
 
 /**
@@ -17,7 +17,7 @@ use Zend\Validator\Exception;
  */
 class ExcludeExtension extends Extension
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -43,16 +43,17 @@ class ExcludeExtension extends Extension
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_FOUND);
             return false;
         }
 
-        $extension  = substr($filename, strrpos($filename, '.') + 1);
+        $extension  = substr($fileInfo['filename'], strrpos($fileInfo['filename'], '.') + 1);
         $extensions = $this->getExtension();
 
         if ($this->getCase() && (! in_array($extension, $extensions))) {

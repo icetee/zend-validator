@@ -12,14 +12,14 @@ namespace Zend\Validator\File;
 use Zend\Stdlib\ErrorHandler;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator for the image size of an image file
  */
 class ImageSize extends AbstractValidator
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -335,17 +335,18 @@ class ImageSize extends AbstractValidator
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfo($value, $file));
-        $this->setValue($filename);
+        $fileInfo = $this->getFileInfo($value, $file);
+
+        $this->setValue($fileInfo['filename']);
 
         // Is file readable ?
-        if (empty($file) || false === is_readable($file)) {
+        if (empty($fileInfo['file']) || false === is_readable($fileInfo['file'])) {
             $this->error(self::NOT_READABLE);
             return false;
         }
 
         ErrorHandler::start();
-        $size = getimagesize($file);
+        $size = getimagesize($fileInfo['file']);
         ErrorHandler::stop();
 
         if (empty($size) || ($size[0] === 0) || ($size[1] === 0)) {

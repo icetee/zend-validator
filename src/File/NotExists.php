@@ -10,14 +10,14 @@
 namespace Zend\Validator\File;
 
 use Zend\Validator\Exception;
-use Zend\Validator\File\ValidationPsr7Trait;
+use Zend\Validator\File\FileInformationTrait;
 
 /**
  * Validator which checks if the destination file does not exist
  */
 class NotExists extends Exists
 {
-    use ValidationPsr7Trait;
+    use FileInformationTrait;
 
     /**
      * @const string Error constants
@@ -40,13 +40,15 @@ class NotExists extends Exists
      */
     public function isValid($value, $file = null)
     {
-        extract($this->getFileInfoExists($value, $file));
+        $fileInfo = $this->getFileInfo($value, $file, false, true);
+
+        $this->setValue($fileInfo['filename']);
 
         $check = false;
         $directories = $this->getDirectory(true);
         if (! isset($directories)) {
             $check = true;
-            if (file_exists($file)) {
+            if (file_exists($fileInfo['file'])) {
                 $this->error(self::DOES_EXIST);
                 return false;
             }
@@ -57,7 +59,7 @@ class NotExists extends Exists
                 }
 
                 $check = true;
-                if (file_exists($directory . DIRECTORY_SEPARATOR . $filename)) {
+                if (file_exists($directory . DIRECTORY_SEPARATOR . $fileInfo['basename'])) {
                     $this->error(self::DOES_EXIST);
                     return false;
                 }
